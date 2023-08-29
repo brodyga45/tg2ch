@@ -54,6 +54,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text='''
 Author: https://t.me/brodyga_45
 /help 
+/count
 /requests
 /bags
 featurerequest text (without /)
