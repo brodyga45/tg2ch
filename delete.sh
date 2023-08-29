@@ -21,7 +21,7 @@ while getopts ":fbh" option; do
              rm ./frequests/$var
          done
          exit;;
-      b) # Feature
+      b) # Bug
          for var in "$@"
          do
              rm ./bags/$var

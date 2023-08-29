@@ -82,6 +82,11 @@ async def bags(update: Update, context: ContextTypes.DEFAULT_TYPE):
             res += str(idd) + ': ' + f.read() + '\n'
     await context.bot.send_message(chat_id=update.effective_chat.id, text=res)
 
+async def count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    res = len(ids)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=str(res))
+
 async def feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     text=update.message.text
@@ -104,10 +109,12 @@ if __name__ == '__main__':
     feedback_handler = MessageHandler(filters.Regex('^featurerequest.*') | filters.Regex('^reportbag.*'), feedback)
     resend_handler = MessageHandler(~filters.COMMAND, resend)
     start_handler = CommandHandler('start', start)
+    count_handler = CommandHandler('count', count)
     help_handler = CommandHandler('help', help)
     requests_handler = CommandHandler('requests', requests1)
     bags_handler = CommandHandler('bags', bags)
     application.add_handler(start_handler)
+    application.add_handler(count_handler)
     application.add_handler(requests_handler)
     application.add_handler(feedback_handler)
     application.add_handler(bags_handler)
