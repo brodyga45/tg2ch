@@ -40,14 +40,17 @@ async def resend(update: Update, context: ContextTypes.DEFAULT_TYPE):
     sticker = update.message.sticker
     for idd in ids:
         if (idd==chat_id)==debug:
-            if text is not None:
-                await context.bot.send_message(chat_id=idd, text=text)
-            elif len(photos):
-                await context.bot.send_photo(chat_id=idd, photo=photos[-1])
-            elif sticker is not None:
-                await context.bot.send_sticker(chat_id=idd, sticker=sticker)
-            elif video is not None:
-                await context.bot.send_video(chat_id=idd, video=video)
+            try:
+                if text is not None:
+                    await context.bot.send_message(chat_id=idd, text=text)
+                elif len(photos):
+                    await context.bot.send_photo(chat_id=idd, photo=photos[-1])
+                elif sticker is not None:
+                    await context.bot.send_sticker(chat_id=idd, sticker=sticker)
+                elif video is not None:
+                    await context.bot.send_video(chat_id=idd, video=video)
+            except:
+                pass
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
