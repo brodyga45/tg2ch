@@ -7,10 +7,29 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 import urllib
 from bottoken import TOKEN
-
+from captcha.image import ImageCaptcha
+import random
+import string
 debug = os.path.isfile('debug')
+status = {}
+saved_content = {}
 
 
+def update_status(chat_id, number=2):
+    if chat_id not in status:
+        status[chat_id] = 1
+        return 1 
+    else:
+        status[chat_id] = status[chat_id] + 1
+        if status[chat_id] >= number:
+            status[chat_id] = 0
+        return status[chat_id]
+
+
+def generate_captcha(length=6):
+    characters = string.ascii_letters + string.digits
+    generated_string = ''.join(random.choice(characters) for _ in range(length))
+    return ''.join(random.choices(characters, k=length))
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -34,23 +53,43 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def resend(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id=update.effective_chat.id
-    photos = update.message.photo
-    video = update.message.video
-    text=update.message.text
-    sticker = update.message.sticker
-    for idd in ids:
-        if (idd==chat_id)==debug:
-            try:
-                if text is not None:
-                    await context.bot.send_message(chat_id=idd, text=text)
-                elif len(photos):
-                    await context.bot.send_photo(chat_id=idd, photo=photos[-1])
-                elif sticker is not None:
-                    await context.bot.send_sticker(chat_id=idd, sticker=sticker)
-                elif video is not None:
-                    await context.bot.send_video(chat_id=idd, video=video)
-            except:
-                pass
+    status = update_status(chat_id)
+    if status == 1:
+        if chat_id not in saved_content:
+            saved_content[chat_id] = {}
+        saved_content[chat_id]['photos'] = update.message.photo
+        saved_content[chat_id]['video'] = update.message.video
+        saved_content[chat_id]['text'] = update.message.text
+        saved_content[chat_id]['sticker'] = update.message.sticker
+        text_captcha = generate_captcha()
+        saved_content['text_captcha'] = text_captcha
+        image = ImageCaptcha(width = 300, height = 100)
+        path = f'{chat_id}.png'
+        image.write(text_captcha, path)
+        await context.bot.send_photo(chat_id=chat_id, photo=open(path, 'rb'))
+    else:
+        text=update.message.text
+        if saved_content['text_captcha'].upper() != text.upper():
+            response = "DON'T MATCH CAPCHA: " + saved_content['text_captcha'].upper() + " != " + text.upper() + '\n' + "DIDN'T SEND"
+            await context.bot.send_message(chat_id=chat_id, text=response)
+        else:
+            photos = saved_content[chat_id]['photos']
+            video = saved_content[chat_id]['video']
+            text = saved_content[chat_id]['text']
+            sticker = saved_content[chat_id]['sticker']
+            for idd in ids:
+                if (idd==chat_id)==debug:
+                    try:
+                        if text is not None:
+                            await context.bot.send_message(chat_id=idd, text=text)
+                        elif len(photos):
+                            await context.bot.send_photo(chat_id=idd, photo=photos[-1])
+                        elif sticker is not None:
+                            await context.bot.send_sticker(chat_id=idd, sticker=sticker)
+                        elif video is not None:
+                            await context.bot.send_video(chat_id=idd, video=video)
+                    except:
+                        pass
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
